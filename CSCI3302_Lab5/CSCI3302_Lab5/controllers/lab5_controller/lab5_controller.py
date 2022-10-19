@@ -1,9 +1,11 @@
+
 """lab5 controller."""
+from runpy import _TempModule
 from controller import Robot, Motor, Camera, RangeFinder, Lidar, Keyboard
 import math
 import numpy as np
 from matplotlib import pyplot as plt
-from scipy.signal import convolve2d # Uncomment if you want to use something else for finding the configuration space
+#from scipy.signal import convolve2d # Uncomment if you want to use something else for finding the configuration space
 
 MAX_SPEED = 7.0  # [rad/s]
 MAX_SPEED_MS = 0.633 # [m/s]
@@ -191,9 +193,23 @@ while robot.step(timestep) != -1 and mode != 'planner':
 
             # You will eventually REPLACE the following 3 lines with a more robust version of the map
             # with a grayscale drawing containing more levels than just 0 and 1.
-            display.setColor(0xFFFFFF)
+
+
+            if map[int(wx*30)][360-int(wy*30)] < 1:
+                map[int(wx*30)][360-int(wy*30)] += 5e-3 
+            
+            g = map[int(wx*30)][360-int(wy*30)]
+            color = int( g * 256**2 + g*256+g) * 255
+
+            #print(color)
+            #we need to reject all values less that .5
+            tempMap = map[map < .5]
+
+            
+            display.setColor(color)
+
             display.drawPixel(int(wx*30),360-int(wy*30))
-            map[int(wx*30)][360-int(wy*30)]=1 
+            
 
     # Draw the robot's current pose on the 360x360 display
     display.setColor(int(0xFF0000))
