@@ -84,7 +84,7 @@ map = None
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
 mode = 'manual' # Part 1.1: manual mode
-# mode = 'planner'
+#mode = 'planner'
 # mode = 'autonomous'
 
 
@@ -114,11 +114,17 @@ if mode == 'planner':
         '''
         pass
 
-    # Part 2.1: Load map (map.npy) from disk and visualize it
+    # Part 2.1: Load map (map.npy) from disk and visualize it    
 
+    lidar_map = np.load(map.npy)
+    print("lidar_map loaded")
+
+    plt.imshow(lidar_map)
+    plt.show
 
     # Part 2.2: Compute an approximation of the “configuration space”
-
+    
+    #i think we need to place squares at every pixel
 
     # Part 2.3 continuation: Call path_planner
 
@@ -203,12 +209,13 @@ while robot.step(timestep) != -1 and mode != 'planner':
 
             #print(color)
             #we need to reject all values less that .5
-            tempMap = map[map < .5]
+            # map = map[map > .5]
+            # map = np.multiply(map,1)
 
             
             display.setColor(color)
-
-            display.drawPixel(int(wx*30),360-int(wy*30))
+            if map[int(wx*30)][360-int(wy*30)] >= .5:
+                display.drawPixel(int(wx*30),360-int(wy*30))
             
 
     # Draw the robot's current pose on the 360x360 display
