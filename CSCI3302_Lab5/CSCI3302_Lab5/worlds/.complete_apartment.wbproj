@@ -9,6 +9,6 @@ renderingMode: PLAIN
 orthographicViewHeight: 1
 textFiles: 0 "controllers/lab5_controller/lab5_controller.py"
 consoles: Console:All:All
-renderingDevicePerspectives: TIAGo Steel:display;1;0.994444;0.814123;0.372812
-renderingDevicePerspectives: laptop:display;1;0.819355;0.739087;0.0247168
-renderingDevicePerspectives: television:display;1;1;0;0
+renderingDevicePerspectives: TIAGo Steel:display;1;1.42778;0.00588524;0.252318
+renderingDevicePerspectives: laptop:display;1;0.3375;0;0.0247168
+renderingDevicePerspectives: television:display;1;0.5;0;0

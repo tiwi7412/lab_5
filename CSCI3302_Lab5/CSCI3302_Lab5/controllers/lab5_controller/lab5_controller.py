@@ -83,8 +83,8 @@ map = None
 
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
-mode = 'manual' # Part 1.1: manual mode
-#mode = 'planner'
+#mode = 'manual' # Part 1.1: manual mode
+mode = 'planner'
 # mode = 'autonomous'
 
 
@@ -200,22 +200,38 @@ while robot.step(timestep) != -1 and mode != 'planner':
             # You will eventually REPLACE the following 3 lines with a more robust version of the map
             # with a grayscale drawing containing more levels than just 0 and 1.
 
+            # print("wx: " + str(wx * 30))
+            # print("wy: " + str(wy * 30))
 
-            if map[int(wx*30)][360-int(wy*30)] < 1:
-                map[int(wx*30)][360-int(wy*30)] += 5e-3 
+            x_coor = int(wx*30)
+            y_coor = 360-int(wy*30)
+
+            # if x_coor > 360:
+            #     x_coor = 360
+            # if y_coor > 360:
+            #     y_coor = 360
             
-            g = map[int(wx*30)][360-int(wy*30)]
-            color = int( g * 256**2 + g*256+g) * 255
+            
+            if map[x_coor][y_coor] < 1:
+                map[x_coor][y_coor] += 5e-3 
+
+            #map_temp[int(wx*30)][360-int(wy*30)] = min(map_temp[int(wx*30)][360-int(wy*30)] + 5e-3, 1)
+            
+            g = map[x_coor][y_coor]
+
+            color = int( (g * 256**2 + g * 256 + g) * 255)
 
             #print(color)
             #we need to reject all values less that .5
-            # map = map[map > .5]
-            # map = np.multiply(map,1)
+            if map[x_coor][y_coor] > 0.5:
+                #map = map * 1
+                display.setColor(int(color))
+                display.drawPixel(x_coor,y_coor)
 
-            
-            display.setColor(color)
-            if map[int(wx*30)][360-int(wy*30)] >= .5:
-                display.drawPixel(int(wx*30),360-int(wy*30))
+
+            # display.setColor(color)
+            # if map[int(wx*30)][360-int(wy*30)] >= .5:
+            #     display.drawPixel(int(wx*30),360-int(wy*30))
             
 
     # Draw the robot's current pose on the 360x360 display
@@ -259,8 +275,8 @@ while robot.step(timestep) != -1 and mode != 'planner':
             map = np.load("map.npy")
             print("Map loaded")
         else: # slow down
-            vL *= 0.75
-            vR *= 0.75
+            vL *= .75
+            vR *= .75
     else: # not manual mode
         # Part 3.2: Feedback controller
         #STEP 1: Calculate the error
