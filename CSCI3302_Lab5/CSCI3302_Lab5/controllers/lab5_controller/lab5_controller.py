@@ -116,7 +116,7 @@ if mode == 'planner':
 
     # Part 2.1: Load map (map.npy) from disk and visualize it    
 
-    lidar_map = np.load(map.npy)
+    lidar_map = np.load("map.npy")
     print("lidar_map loaded")
 
     plt.imshow(lidar_map)
