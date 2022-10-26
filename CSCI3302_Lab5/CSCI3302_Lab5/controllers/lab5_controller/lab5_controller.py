@@ -83,8 +83,8 @@ map = None
 
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
-mode = 'manual' # Part 1.1: manual mode
-#mode = 'planner'
+#mode = 'manual' # Part 1.1: manual mode
+mode = 'planner'
 # mode = 'autonomous'
 
 
@@ -120,12 +120,24 @@ if mode == 'planner':
     lidar_map = np.load("map.npy")
     print("lidar_map loaded")
 
+    #print(lidar_map[i][j])
+    for i in range(len(lidar_map)):
+        for j in range(len(lidar_map[i])):
+               # filter out small values on the map
+                if lidar_map[i][j] < .9:
+                    lidar_map[i][j] = 0
+
+                #draw squares on each pixel
+                if lidar_map[i][j] != 0:
+                    rectangle = plt.Rectangle((i - 1,j - 1), 5, 5, fc='yellow')           
+                    plt.gca().add_patch(rectangle)
+        
     plt.imshow(lidar_map)
-    plt.show
+    plt.show()
 
     # Part 2.2: Compute an approximation of the “configuration space”
     
-    #i think we need to place squares at every pixel
+    
 
     # Part 2.3 continuation: Call path_planner
 
