@@ -116,8 +116,8 @@ if mode == 'planner':
 
     # Part 2.1: Load map (map.npy) from disk and visualize it    
 
-    lidar_map = np.load(map.npy)
-    print("lidar_map loaded")
+    lidar_map = np.load('map.npy')
+    print('lidar_map loaded')
 
     plt.imshow(lidar_map)
     plt.show
@@ -268,7 +268,7 @@ while robot.step(timestep) != -1 and mode != 'planner':
         elif key == ord('S'):
             # Part 1.4: Filter map and save to filesystem
             
-            np.save("map.npy",map)
+            np.save('map.npy',map)
             print("Map file saved")
         elif key == ord('L'):
             # You will not use this portion in Part 1 but here's an example for loading saved a numpy array
