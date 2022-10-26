@@ -83,8 +83,8 @@ map = None
 
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
-#mode = 'manual' # Part 1.1: manual mode
-mode = 'planner'
+mode = 'manual' # Part 1.1: manual mode
+#mode = 'planner'
 # mode = 'autonomous'
 
 def get_neighbors(vertex, map): #can at most send a list of 4 pairs of coordinates
@@ -126,6 +126,7 @@ if mode == 'planner':
         pass
 
     # Part 2.1: Load map (map.npy) from disk and visualize it    
+
 
     lidar_map = np.load("map.npy")
     print("lidar_map loaded")
@@ -217,10 +218,10 @@ while robot.step(timestep) != -1 and mode != 'planner':
             x_coor = int(wx*30)
             y_coor = 360-int(wy*30)
 
-            # if x_coor > 360:
-            #     x_coor = 360
-            # if y_coor > 360:
-            #     y_coor = 360
+            if x_coor > 359:
+                x_coor = 359
+            if y_coor > 359:
+                y_coor = 359
             
             
             if map[x_coor][y_coor] < 1:
@@ -279,7 +280,7 @@ while robot.step(timestep) != -1 and mode != 'planner':
         elif key == ord('S'):
             # Part 1.4: Filter map and save to filesystem
             
-            np.save("map.npy",map)
+            np.save('map.npy',map)
             print("Map file saved")
         elif key == ord('L'):
             # You will not use this portion in Part 1 but here's an example for loading saved a numpy array
