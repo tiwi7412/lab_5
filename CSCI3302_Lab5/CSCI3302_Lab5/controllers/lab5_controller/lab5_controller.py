@@ -87,8 +87,19 @@ map = None
 mode = 'planner'
 # mode = 'autonomous'
 
-
-
+def get_neighbors(vertex, map): #can at most send a list of 4 pairs of coordinates
+    x = vertex[0]
+    y = vertex[1]
+    neighbors = []
+    if x > 0:
+        neighbors.append([x-1,y])
+    if x < len(map) - 1: #0 - 359
+        neighbors.append([x+1,y])
+    if y > 0:
+        neighbors.append([x,y-1])
+    if y < len(map) - 1:
+        neighbors.append([x,y+1])
+    return neighbors
 
 ###################
 #
