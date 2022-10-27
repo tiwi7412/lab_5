@@ -145,6 +145,7 @@ if mode == 'planner':
         
     plt.imshow(lidar_map)
     plt.show()
+    #test
 
     # Part 2.2: Compute an approximation of the “configuration space”
     
