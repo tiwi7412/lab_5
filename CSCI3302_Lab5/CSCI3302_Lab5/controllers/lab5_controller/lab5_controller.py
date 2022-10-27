@@ -131,17 +131,23 @@ if mode == 'planner':
     lidar_map = np.load("map.npy")
     print("lidar_map loaded")
 
-    #print(lidar_map[i][j])
+    #Play with this number to find something suitable, the number corresponds to the # of pixels you want to cover
+    kernel_size = 5
+    
     for i in range(len(lidar_map)):
         for j in range(len(lidar_map[i])):
                # filter out small values on the map
-                if lidar_map[i][j] < .9:
+                if lidar_map[i][j] < 1:
                     lidar_map[i][j] = 0
 
                 #draw squares on each pixel
                 if lidar_map[i][j] != 0:
-                    rectangle = plt.Rectangle((i - 1,j - 1), 5, 5, fc='yellow')           
-                    plt.gca().add_patch(rectangle)
+                    # rectangle = plt.Rectangle((i - 1,j - 1), 5, 5, fc='yellow')           
+                    # plt.gca().add_patch(rectangle)
+                    kernel = np.ones((kernel_size, kernel_size))
+                    convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
+                    #now threshold this map
+
         
     plt.imshow(lidar_map)
     plt.show()
