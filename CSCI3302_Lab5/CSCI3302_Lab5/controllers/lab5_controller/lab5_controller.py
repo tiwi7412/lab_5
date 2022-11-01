@@ -101,6 +101,17 @@ def get_neighbors(vertex, map): #can at most send a list of 4 pairs of coordinat
         neighbors.append([x,y+1])
     return neighbors
 
+def get_travel_cost(source, dest, map):
+
+    if source == dest:
+        return 0
+    elif map[source[0]][dest[1]] == 1:
+        return 1e5
+    elif math.abs(source[0] - dest[0]) + math.abs(source[1] - dest[1]) == 1:
+        return 1
+    else:
+        return 1e5
+
 ###################
 #
 # Planner
@@ -123,6 +134,29 @@ if mode == 'planner':
         :param end: A tuple of indices representing the end cell in the map
         :return: A list of tuples as a path from the given start to the given end in the given maze
         '''
+        dist = {}
+        prev = {}
+        for i in range(len(map)):
+            for j in range(len(map[0])):
+                dist[(i, j)] = math.inf
+                prev[(i, j)] = None
+
+        dist[(start[0], start[1])] = 0
+
+        q_cost = dist.copy()
+
+        while len(q_cost) > 0:
+            u = min(q_cost, key=q_cost.get)
+            _ = q_cost.pop(u)
+            for neighbor in get_neighbors(u, map):
+                new_dist = dist[u] + get_travel_cost(u, neighbor, map)
+                if new_dist < dist[ (neighbor[0], neighbor[1]) ]:
+                    dist[ (neighbor[0], neighbor[1]) ] = new_dist
+                    q_cost[ (neighbor[0], neighbor[1]) ] = new_dist
+                    prev[ (neighbor[0], neighbor[1]) ] = u
+
+        #find the shortest path from start to end using while loop
+        #return value
         pass
 
     # Part 2.1: Load map (map.npy) from disk and visualize it    
