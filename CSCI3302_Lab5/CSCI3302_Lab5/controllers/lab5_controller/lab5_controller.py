@@ -1,4 +1,3 @@
-
 """lab5 controller."""
 from runpy import _TempModule
 from controller import Robot, Motor, Camera, RangeFinder, Lidar, Keyboard
@@ -107,7 +106,7 @@ def get_travel_cost(source, dest, map):
         return 0
     elif map[source[0]][dest[1]] == 1:
         return 1e5
-    elif math.abs(source[0] - dest[0]) + math.abs(source[1] - dest[1]) == 1:
+    elif abs(source[0] - dest[0]) + abs(source[1] - dest[1]) == 1:
         return 1
     else:
         return 1e5
@@ -128,12 +127,12 @@ if mode == 'planner':
 
     # Part 2.3: Implement A* or Dijkstra's Algorithm to find a path
     def path_planner(map, start, end):
-        '''
-        :param map: A 2D numpy array of size 360x360 representing the world's cspace with 0 as free space and 1 as obstacle
-        :param start: A tuple of indices representing the start cell in the map
-        :param end: A tuple of indices representing the end cell in the map
-        :return: A list of tuples as a path from the given start to the given end in the given maze
-        '''
+   
+        #param map: A 2D numpy array of size 360x360 representing the world's cspace with 0 as free space and 1 as obstacle
+        #param start: A tuple of indices representing the start cell in the map
+        #param end: A tuple of indices representing the end cell in the map
+        #return: A list of tuples as a path from the given start to the given end in the given maze
+     
         dist = {}
         prev = {}
         for i in range(len(map)):
@@ -157,7 +156,16 @@ if mode == 'planner':
 
         #find the shortest path from start to end using while loop
         #return value
-        pass
+        path = [end]
+        parent_vertex = prev[ (end[0], end[1]) ]
+
+        while parent_vertex is not None:
+            path.append(parent_vertex)
+            parent_vertex = prev[(parent_vertex[0], parent_vertex[1])]
+
+        path.reverse()
+        print(path)
+        return path
 
     # Part 2.1: Load map (map.npy) from disk and visualize it    
 
@@ -179,7 +187,7 @@ if mode == 'planner':
                     # rectangle = plt.Rectangle((i - 1,j - 1), 5, 5, fc='yellow')           
                     # plt.gca().add_patch(rectangle)
                     kernel = np.ones((kernel_size, kernel_size))
-                    convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
+                    #convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
                     #now threshold this map
 
         
@@ -216,7 +224,7 @@ if mode == 'autonomous':
 state = 0 # use this to iterate through your path
 
 
-
+path_planner(lidar_map, [270,260], [140,170])
 
 while robot.step(timestep) != -1 and mode != 'planner':
 
