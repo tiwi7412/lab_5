@@ -200,10 +200,18 @@ if mode == 'planner':
     
 
     # Part 2.3 continuation: Call path_planner
-
+    path_full = path_planner(lidar_map, [270,260], [140,170]) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
 
     # Part 2.4: Turn paths into waypoints and save on disk as path.npy and visualize it
     waypoints = []
+    for i in range(len(path_full)):
+        wp = [round(path_full[i][0]/30, 2), round(path_full[i][1]/30, 2)] #list index, coord
+        if i == 0:
+            waypoints.append(wp)
+        elif i > 0 and waypoints[-1] != wp:
+            waypoints.append(wp)
+    np.save('path.npy',waypoints)
+    print("waypoints file saved")
 
 ######################
 #
@@ -222,9 +230,6 @@ if mode == 'autonomous':
     waypoints = [] # Replace with code to load your path
 
 state = 0 # use this to iterate through your path
-
-
-path_planner(lidar_map, [270,260], [140,170])
 
 while robot.step(timestep) != -1 and mode != 'planner':
 
