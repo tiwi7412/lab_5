@@ -238,6 +238,77 @@ if mode == 'autonomous':
 
 state = 0 # use this to iterate through your path
 
+
+def heading():
+    global vL, vR, distance_error, bearing_error, heading_error
+    if heading_error < -.01:
+        vL = MAX_SPEED/2
+        vR = -MAX_SPEED/2
+    elif heading_error > .01:
+        vL = -MAX_SPEED/2
+        vR = MAX_SPEED/2
+    else:
+        vL = 0
+        vR = 0
+    print("heading", vL, vR)
+
+def distance():
+    global vL, vR, distance_error, bearing_error, heading_error
+    if distance_error > .01:
+        vL = MAX_SPEED/2
+        vR = MAX_SPEED/2
+    elif distance_error < .01:
+        vL = 0
+        vR = 0
+        heading()
+    print("distance", vL, vR)
+            
+
+def bearing():
+    global vL, vR, distance_error, bearing_error, heading_error
+    if bearing_error < -.01:
+        vL = MAX_SPEED/2
+        vR = -MAX_SPEED/2
+    elif bearing_error > .01:
+        vL = -MAX_SPEED/2
+        vR = MAX_SPEED/2
+    else:
+        vL = 0
+        vR = 0
+        distance()
+    print("bearing", vL, vR)
+
+
+def feedback_controller():
+    global vL, vR, distance_error, bearing_error, heading_error, waypoint_counter
+    print("feedback_controller1", vL, vR)
+    if distance_error > .015:
+        distance_constant = .2
+        if distance_error > .04:
+            phi_l = (distance_error*distance_constant - (bearing_error*AXLE_LENGTH)/2)/AXEL_RADIUS
+            phi_r = (distance_error*distance_constant + (bearing_error*AXLE_LENGTH)/2)/AXEL_RADIUS
+        else:
+            phi_l = (distance_error - (heading_error*AXLE_LENGTH)/2)/AXEL_RADIUS
+            phi_r = (distance_error + (heading_error*AXLE_LENGTH)/2)/AXEL_RADIUS
+            waypoint_counter = waypoint_counter + 1
+
+        if phi_l > phi_r:
+            vL = (MAX_SPEED/4) * (phi_l/phi_r)
+            vR = (MAX_SPEED/4)
+        elif phi_l < phi_r:
+            vL = (MAX_SPEED/4)
+            vR = (MAX_SPEED/4) * (phi_r/phi_l)
+        else:
+            vL = MAX_SPEED/2
+            vR = MAX_SPEED/2
+    else:
+        vL = 0
+        vR = 0
+        waypoint_counter = waypoint_counter + 1
+    print("feedback_controller1", vL, vR)
+
+
+
 while robot.step(timestep) != -1 and mode != 'planner':
 
     ###################
@@ -367,17 +438,20 @@ while robot.step(timestep) != -1 and mode != 'planner':
     else: # not manual mode
         # Part 3.2: Feedback controller
         #STEP 1: Calculate the error
-        rho = 0
-        alpha = -(math.atan2(waypoint[state][1]-pose_y,waypoint[state][0]-pose_x) + pose_theta)
-
-
+        #rho = 0
+        #alpha = -(math.atan2(waypoint[state][1]-pose_y,waypoint[state][0]-pose_x) + pose_theta)
+        distance_error = math.sqrt((pose_x - waypoints[waypoint_counter][0])**2+(pose_y - waypoints[waypoint_counter][1])**2)
+        bearing_error = math.atan((pose_y - waypoints[waypoint_counter][1])/(pose_x - waypoints[waypoint_counter][0])) - pose_theta
+        heading_error = math.atan2((waypoints[waypoint_counter][1] - pose_y),(waypoints[waypoint_counter][0] - pose_x))
+        bearing()
+        feedback_controller()
         #STEP 2: Controller
-        dX = 0
-        dTheta = 0
+        #dX = 0
+        #dTheta = 0
 
         #STEP 3: Compute wheelspeeds
-        vL = 0
-        vR = 0
+        #vL = 0
+        #vR = 0
 
         # Normalize wheelspeed
         # (Keep the wheel speeds a bit less than the actual platform MAX_SPEED to minimize jerk)
