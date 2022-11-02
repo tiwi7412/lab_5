@@ -207,7 +207,7 @@ if mode == 'planner':
     # Part 2.4: Turn paths into waypoints and save on disk as path.npy and visualize it
     waypoints = []
     for i in range(len(path_full)):
-        wp = [round(path_full[i][0]/30, 2), round(path_full[i][1]/30, 2)] #list index, coord
+        wp = [round(path_full[i][0]/-30, 2), round(path_full[i][1]/-30, 2)] #list index, coord
         if i == 0:
             waypoints.append(wp)
         elif i > 0 and waypoints[-1] != wp:
