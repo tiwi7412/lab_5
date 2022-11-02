@@ -185,7 +185,7 @@ if mode == 'planner':
                 #draw squares on each pixel
                 if lidar_map[i][j] != 0:
                     lidar_map[i][j] = 0
-                    rectangle = plt.Rectangle((i - 1,j - 1), 6, 6, fc='yellow')           
+                    rectangle = plt.Rectangle((i - 1,j - 1), 8, 8, fc='yellow')           
                     plt.gca().add_patch(rectangle)
                     kernel = np.ones((kernel_size, kernel_size))
                     convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
