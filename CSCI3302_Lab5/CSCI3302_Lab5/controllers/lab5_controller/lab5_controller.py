@@ -118,12 +118,12 @@ def get_travel_cost(source, dest, map):
 ###################
 if mode == 'planner':
     # Part 2.3: Provide start and end in world coordinate frame and convert it to map's frame
-    start_w = None # (Pose_X, Pose_Z) in meters
-    end_w = None # (Pose_X, Pose_Z) in meters
+    start_w = (-8.4357, -4.6653) # (Pose_X, Pose_Z) in meters
+    end_w = (-10.0, -7.0) # in meters
 
     # Convert the start_w and end_w from the webots coordinate frame into the map frame
-    start = None # (x, y) in 360x360 map
-    end = None # (x, y) in 360x360 map
+    start = (round(start_w[0]*-30), round(start_w[1]*-30))# (x, y) in 360x360 map
+    end = (round(end_w[0]*-30), round(end_w[1]*-30)) # (x, y) in 360x360 map
 
     # Part 2.3: Implement A* or Dijkstra's Algorithm to find a path
     def path_planner(map, start, end):
@@ -150,14 +150,14 @@ if mode == 'planner':
             for neighbor in get_neighbors(u, map):
                 new_dist = dist[u] + get_travel_cost(u, neighbor, map)
                 if new_dist < dist[ (neighbor[0], neighbor[1]) ]:
-                    dist[ (neighbor[0], neighbor[1]) ] = new_dist
-                    q_cost[ (neighbor[0], neighbor[1]) ] = new_dist
-                    prev[ (neighbor[0], neighbor[1]) ] = u
+                    dist[(neighbor[0], neighbor[1])] = new_dist
+                    q_cost[(neighbor[0], neighbor[1])] = new_dist
+                    prev[(neighbor[0], neighbor[1])] = u
 
         #find the shortest path from start to end using while loop
         #return value
         path = [end]
-        parent_vertex = prev[ (end[0], end[1]) ]
+        parent_vertex = prev[(end[0], end[1])]
 
         while parent_vertex is not None:
             path.append(parent_vertex)
@@ -200,7 +200,7 @@ if mode == 'planner':
     
 
     # Part 2.3 continuation: Call path_planner
-    path_full = path_planner(lidar_map, [270,260], [140,170]) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
+    path_full = path_planner(lidar_map, start, end) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
 
     # Part 2.4: Turn paths into waypoints and save on disk as path.npy and visualize it
     waypoints = []
@@ -212,6 +212,11 @@ if mode == 'planner':
             waypoints.append(wp)
     np.save('path.npy',waypoints)
     print("waypoints file saved")
+    print(waypoints)
+    #path_map = np.load("path.npy")
+    #print("path loaded")
+    #plt.imshow(path_map)
+    #plt.show()
 
 ######################
 #
