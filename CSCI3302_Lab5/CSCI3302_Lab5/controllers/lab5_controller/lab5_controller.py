@@ -4,7 +4,7 @@ from controller import Robot, Motor, Camera, RangeFinder, Lidar, Keyboard
 import math
 import numpy as np
 from matplotlib import pyplot as plt
-#from scipy.signal import convolve2d # Uncomment if you want to use something else for finding the configuration space
+from scipy.signal import convolve2d # Uncomment if you want to use something else for finding the configuration space
 
 MAX_SPEED = 7.0  # [rad/s]
 MAX_SPEED_MS = 0.633 # [m/s]
@@ -184,15 +184,17 @@ if mode == 'planner':
 
                 #draw squares on each pixel
                 if lidar_map[i][j] != 0:
-                    # rectangle = plt.Rectangle((i - 1,j - 1), 5, 5, fc='yellow')           
-                    # plt.gca().add_patch(rectangle)
+                    lidar_map[i][j] = 0
+                    rectangle = plt.Rectangle((i - 1,j - 1), 6, 6, fc='yellow')           
+                    plt.gca().add_patch(rectangle)
                     kernel = np.ones((kernel_size, kernel_size))
-                    #convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
+                    convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
                     #now threshold this map
-
-        
+    
     plt.imshow(lidar_map)
     plt.show()
+    
+
     #test
 
     # Part 2.2: Compute an approximation of the “configuration space”
@@ -351,7 +353,9 @@ while robot.step(timestep) != -1 and mode != 'planner':
         elif key == ord('L'):
             # You will not use this portion in Part 1 but here's an example for loading saved a numpy array
             map = np.load("map.npy")
+            map_config = copy.copy(map)
             print("Map loaded")
+                        
         else: # slow down
             vL *= .75
             vR *= .75
