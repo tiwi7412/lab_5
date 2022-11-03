@@ -5,6 +5,7 @@ import math
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.signal import convolve2d # Uncomment if you want to use something else for finding the configuration space
+import sys
 
 MAX_SPEED = 7.0  # [rad/s]
 MAX_SPEED_MS = 0.633 # [m/s]
@@ -13,6 +14,7 @@ MOTOR_LEFT = 10
 MOTOR_RIGHT = 11
 N_PARTS = 12
 WHEEL_RADIUS = 0.0904
+AXLE_RADIUS = AXLE_LENGTH/2
 
 LIDAR_ANGLE_BINS = 667
 LIDAR_SENSOR_MAX_RANGE = 2.75 # Meters
@@ -84,8 +86,8 @@ map = None
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
 #mode = 'manual' # Part 1.1: manual mode
-mode = 'planner'
-#mode = 'autonomous'
+#mode = 'planner'
+mode = 'autonomous'
 
 def get_neighbors(vertex, map): #can at most send a list of 4 pairs of coordinates
     x = vertex[0]
@@ -102,19 +104,13 @@ def get_neighbors(vertex, map): #can at most send a list of 4 pairs of coordinat
     return neighbors
 
 def get_travel_cost(source, dest, map):
-
     if source == dest:
-        print("here1")
         return 0
     elif map[dest[0]][dest[1]] > 0:
-        print("here2")
         return 1e5
-    elif abs(source[0] - dest[0]) + abs(source[1] - dest[1]) > 0:
-        print("here3")
-        return 1
-    else:
-        print("here4")
-        return 1e5
+    return 1
+        
+
 
 ###################
 #
@@ -124,7 +120,7 @@ def get_travel_cost(source, dest, map):
 if mode == 'planner':
     # Part 2.3: Provide start and end in world coordinate frame and convert it to map's frame
     start_w = (-8.4357, -4.6653) # (Pose_X, Pose_Z) in meters
-    end_w = (-10.0, -7.0) # in meters
+    end_w = (-7, -10.0) # in meters
 
     # Convert the start_w and end_w from the webots coordinate frame into the map frame
     start = (round(start_w[0]*-30), round(start_w[1]*-30))# (x, y) in 360x360 map
@@ -203,10 +199,10 @@ if mode == 'planner':
     #test
  
     # Part 2.2: Compute an approximation of the “configuration space”
-    
-    
 
+    
     # Part 2.3 continuation: Call path_planner
+    lidar_map = np.load("map.npy")
     path_full = path_planner(lidar_map, start, end) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
 
     # Part 2.4: Turn paths into waypoints and save on disk as path.npy and visualize it
@@ -246,9 +242,12 @@ waypoints = []
 if mode == 'autonomous':
     # Part 3.1: Load path from disk and visualize it
     waypoints = np.load("path.npy")
-    target_pose = waypoints[0]
+    target_pose = waypoints[10]
     point_count = 0
-
+    prev_DE = 0
+    direction = 1
+    for_a_few = 0
+    STOP_TURNING = 0
 state = 0 # use this to iterate through your path
 
 while robot.step(timestep) != -1 and mode != 'planner':
@@ -266,7 +265,7 @@ while robot.step(timestep) != -1 and mode != 'planner':
 
     n = compass.getValues()
     rad = ((math.atan2(n[0], -n[2])))#-1.5708)
-    pose_theta = rad
+    pose_theta = -rad
     
     lidar_sensor_readings = lidar.getRangeImage()
     lidar_sensor_readings = lidar_sensor_readings[83:len(lidar_sensor_readings)-83]
@@ -397,42 +396,50 @@ while robot.step(timestep) != -1 and mode != 'planner':
             
         elif point_count >= len(waypoints):
             print("end of path!")
-        
+        if pose_theta > 6.28+3.14/2: pose_theta -= 6.28
+        if pose_theta < -3.14: pose_theta += 6.28
+
         distance_error = math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)
-        bearing_error = math.atan((pose_y - target_pose[1])/(pose_x - target_pose[0])) - pose_theta
-        heading_error = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x))
+        bearing_error = math.atan2((pose_y - target_pose[1]),(pose_x - target_pose[0])) - pose_theta
+        heading_error = bearing_error
+
         
         print("target_pose: ", target_pose)
+        print("Current pose X: ", pose_x, " Y: ", pose_y, " Theta: ", pose_theta)
         print("distance_error: ", distance_error)
-        
+        print("heading_error: ", heading_error)
         #STEP 2: Controller
-        
-        dX_gain = 0.3
-        if distance_error > 0.05:
-            dTheta = bearing_error
-            if abs(bearing_error) > 0.05:
-                dX_gain = 0
-        else:
-            dTheta = heading_error
-            dX_gain = 0
-        dX = (dX_gain * distance_error)
-        
-        left_speed_pct = 0
-        right_speed_pct = 0
-        phi_l = (dX - (dTheta*AXLE_LENGTH/2.))/WHEEL_RADIUS
-        phi_r = (dX + (dTheta*AXLE_LENGTH/2.))/WHEEL_RADIUS
-        
-        normalizer = max(abs(phi_l), abs(phi_r))
-        left_speed_pct = (phi_l)/normalizer
-        right_speed_pct = (phi_r)/normalizer
-        
-        if distance_error < 0.05 and abs(heading_error) < 0.05:
-            left_speed_pct = 0
-            right_speed_pct = 0
+        if distance_error > 0.015:
+            distance_constant = .2
+            if distance_error > 0.05:
+                phi_l = (distance_error*distance_constant - (bearing_error*AXLE_LENGTH)/2)/AXLE_RADIUS
+                phi_r = (distance_error*distance_constant + (bearing_error*AXLE_LENGTH)/2)/AXLE_RADIUS
+            else:
+                phi_l = (distance_error - (heading_error*AXLE_LENGTH)/2)/AXLE_RADIUS
+                phi_r = (distance_error + (heading_error*AXLE_LENGTH)/2)/AXLE_RADIUS
+                print("point found")
+                point_count+=1
+                robot_parts[MOTOR_LEFT].setVelocity(0)
+                robot_parts[MOTOR_RIGHT].setVelocity(0)
         #STEP 3: Compute wheelspeeds
-        vL = left_speed_pct*MAX_SPEED/2
-        vR = right_speed_pct*MAX_SPEED/2
-
+            if phi_l < phi_r:
+                vL = (MAX_SPEED/4) * (phi_l/phi_r)
+                vR = (MAX_SPEED/4)
+            elif phi_l > phi_r:
+                vL = (MAX_SPEED/4)
+                vR = (MAX_SPEED/4) * (phi_r/phi_l)
+            else:
+                vL = MAX_SPEED/2
+                vR = MAX_SPEED/2
+                if prev_DE - distance_error < 0 and for_a_few <= 0:
+                    direction = -direction
+                    for_a_few = 100
+                    print("FAF")
+                    sys.exit()
+            vL = vL * direction
+            vR = vR * direction
+            prev_DE = distance_error
+            for_a_few -= 1 #so it gives the robot a second to change directions
         # (Keep the wheel speeds a bit less than the actual platform MAX_SPEED to minimize jerk)
 
 
