@@ -86,8 +86,8 @@ map = None
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
 #mode = 'manual' # Part 1.1: manual mode
-mode = 'planner'
-#mode = 'autonomous'
+#mode = 'planner'
+mode = 'autonomous'
 
 def get_neighbors(vertex, map): #can at most send a list of 4 pairs of coordinates
     x = vertex[0]
@@ -102,11 +102,33 @@ def get_neighbors(vertex, map): #can at most send a list of 4 pairs of coordinat
     if y < len(map) - 1:
         neighbors.append([x,y+1])
     return neighbors
+    
+def get_neighbors_bigger(vertex, map):
+    x = vertex[0]
+    y = vertex[1]
+    neighbors = []
+    if x > 0:
+        neighbors.append([x-1,y])
+        if y > 0:
+            neighbors.append([x-1,y-1])
+    if x < len(map) - 1: #0 - 359
+        neighbors.append([x+1,y])
+        if y < len(map) - 1:
+            neighbors.append([x+1,y+1])
+    if y > 0:
+        neighbors.append([x,y-1])
+        if x < len(map) - 1:
+            neighbors.append([x+1,y-1])
+    if y < len(map) - 1:
+        neighbors.append([x,y+1])
+        if x > 0:
+            neighbors.append([x-1,y+1])
+    return neighbors
 
 def get_travel_cost(source, dest, map):
     if source == dest:
         return 0
-    elif map[dest[0]][dest[1]] > 0:
+    elif map[dest[0]][dest[1]] > 0.2:
         return 1e5
     return 1
         
@@ -203,8 +225,15 @@ if mode == 'planner':
     
     # Part 2.3 continuation: Call path_planner
     lidar_map = np.load("map.npy")
-    path_full = path_planner(lidar_map, start, end) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
-
+    lidar_map_copy = lidar_map.copy()
+    for i in range(len(lidar_map)):
+         for j in range(len(lidar_map[i])):
+             if lidar_map[i][j] > 0.2:
+                 lidar_map_copy[i][j] = 1
+                 for neighbor in get_neighbors_bigger((i,j), lidar_map):
+                     lidar_map_copy[neighbor[0]][neighbor[1]] = 1 
+    path_full = path_planner(lidar_map_copy, start, end) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
+    
     # Part 2.4: Turn paths into waypoints and save on disk as path.npy and visualize it
     waypoints = []
     for i in range(len(path_full)):
@@ -242,7 +271,8 @@ waypoints = []
 if mode == 'autonomous':
     # Part 3.1: Load path from disk and visualize it
     waypoints = np.load("path.npy")
-    target_pose = waypoints[10]
+    waypoints = [[-8.43, -4.67], [-8.00, -4.8], [-7.8, -5], [-7.6, -5.2], [-7.2, -5.4], [-7.0, -5.4], [-6.8, -5.4], [-6.6, -5.4], [-6.5, -5.4], [-6.4, -5.4], [-6.4, -5.6], [-6.4, -5.8], [-6.3, -6], [-6.3, -6.2], [-6.3, -6.4], [-6.3, -7], [-6.3, -7.5], [-6.3, -8], [-6.3, -8.5], [-6.3, -8.75], [-6.5, -9], [-6.7, -9.2], [-6.9, -9.4], [-7, -10]]
+    target_pose = waypoints[1]#waypoints[10]
     point_count = 0
     prev_DE = 0
     direction = 1
@@ -393,17 +423,18 @@ while robot.step(timestep) != -1 and mode != 'planner':
         if math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2) < 0.1 and point_count < len(waypoints) - 1:
             point_count+=1
             target_pose = waypoints[point_count]
-            
+            print("new target pose is: ", target_pose)
+            print("step: ", point_count, " of ", len(waypoints))
         elif point_count >= len(waypoints):
             print("end of path!")
 
         distance_error = math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)
-        if target_pose[0] - pose_x < 0:    
-            bearing_error = math.atan2((pose_y - target_pose[1]),(pose_x - target_pose[0])) - pose_theta + math.pi
-            theta_should_be = math.atan2((pose_y - target_pose[1]),(pose_x - target_pose[0])) + math.pi
+        if target_pose[0] < pose_x:   
+            bearing_error = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x)) - pose_theta + math.pi
+            theta_should_be = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x)) + math.pi
         else:
-            bearing_error = math.atan2((pose_y - target_pose[1]),(pose_x - target_pose[0])) - pose_theta
-            theta_should_be = math.atan2((pose_y - target_pose[1]),(pose_x - target_pose[0]))
+            bearing_error = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x)) - pose_theta
+            theta_should_be = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x))
         heading_error = bearing_error
 
         
@@ -412,6 +443,7 @@ while robot.step(timestep) != -1 and mode != 'planner':
         print("distance_error: ", distance_error)
         print("heading_error: ", heading_error)
         print("theta should be: ", theta_should_be)
+        #if target_pose[1] - pose_y < 0.1 and target_pose[1] - pose_y < 0.1: 
         #STEP 2: Controller
         if distance_error > 0.015:
             distance_constant = .2
