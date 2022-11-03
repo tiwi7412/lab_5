@@ -265,7 +265,7 @@ while robot.step(timestep) != -1 and mode != 'planner':
 
     n = compass.getValues()
     rad = ((math.atan2(n[0], -n[2])))#-1.5708)
-    pose_theta = -rad
+    pose_theta = rad
     
     lidar_sensor_readings = lidar.getRangeImage()
     lidar_sensor_readings = lidar_sensor_readings[83:len(lidar_sensor_readings)-83]
@@ -396,8 +396,6 @@ while robot.step(timestep) != -1 and mode != 'planner':
             
         elif point_count >= len(waypoints):
             print("end of path!")
-        if pose_theta > 6.28+3.14/2: pose_theta -= 6.28
-        if pose_theta < -3.14: pose_theta += 6.28
 
         distance_error = math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)
         bearing_error = math.atan2((pose_y - target_pose[1]),(pose_x - target_pose[0])) - pose_theta
@@ -408,6 +406,7 @@ while robot.step(timestep) != -1 and mode != 'planner':
         print("Current pose X: ", pose_x, " Y: ", pose_y, " Theta: ", pose_theta)
         print("distance_error: ", distance_error)
         print("heading_error: ", heading_error)
+        print("theta should be: ", math.atan2((pose_y - target_pose[1]),(pose_x - target_pose[0])))
         #STEP 2: Controller
         if distance_error > 0.015:
             distance_constant = .2
@@ -431,11 +430,9 @@ while robot.step(timestep) != -1 and mode != 'planner':
             else:
                 vL = MAX_SPEED/2
                 vR = MAX_SPEED/2
-                if prev_DE - distance_error < 0 and for_a_few <= 0:
-                    direction = -direction
-                    for_a_few = 100
-                    print("FAF")
-                    sys.exit()
+            #if prev_DE - distance_error < 0 and for_a_few <= 0:
+            #    direction = -direction
+            #    for_a_few = 100
             vL = vL * direction
             vR = vR * direction
             prev_DE = distance_error
