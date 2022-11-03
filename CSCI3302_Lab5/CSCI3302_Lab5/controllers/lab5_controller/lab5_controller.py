@@ -202,37 +202,6 @@ if mode == 'planner':
     
 
     # Part 2.3 continuation: Call path_planner
-<<<<<<< HEAD
-    path_full = path_planner(lidar_map, start, end) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
-    waypoints = []
-    for i in range(len(path_full)):
-        wp = [round(path_full[i][0]/-30, 2), round(path_full[i][1]/-30, 2)] #list index, coord
-        if i == 0:
-            waypoints.append(wp)
-        elif i > 0 and waypoints[-1] != wp:
-            waypoints.append(wp)
-    np.save('path.npy',waypoints)
-    print("waypoints file saved")
-    print(waypoints)
-    
-    #for k in range(len(waypoints)):
-    #    waypoint_map = (waypoints[k][0]*(-30),waypoints[k][1]*(-30))
-    #    if i == waypoint_map[0] and j == waypoint_map[1]:
-    #        rectangle = plt.Rectangle((i - 1,j - 1), 2, 2, fc='green')           
-    #        plt.gca().add_patch(rectangle)
-    #        kernel = np.ones((kernel_size, kernel_size))
-    #        convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
-    #plt.imshow(lidar_map)
-    #plt.show()
-    
-    
-    # Part 2.4: Turn paths into waypoints and save on disk as path.npy and visualize it
-
-    #path_map = np.load("path.npy")
-    #print("path loaded")
-    #plt.imshow(path_map)
-    #plt.show()
-=======
     run_algo = False #runs algo and saves to path.npy file
     if(run_algo):
         path_full = path_planner(lidar_map, start, end) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
@@ -249,8 +218,16 @@ if mode == 'planner':
         np.save('path.npy',waypoints)
         print("waypoints file saved")
         print(waypoints)
-
->>>>>>> 028f21a279007012842338c2e43b7204df3807d9
+        
+        #for k in range(len(waypoints)):
+        #    waypoint_map = (waypoints[k][0]*(-30),waypoints[k][1]*(-30))
+        #    if i == waypoint_map[0] and j == waypoint_map[1]:
+        #        rectangle = plt.Rectangle((i - 1,j - 1), 2, 2, fc='green')           
+        #        plt.gca().add_patch(rectangle)
+        #        kernel = np.ones((kernel_size, kernel_size))
+        #        convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
+        #plt.imshow(lidar_map)
+        #plt.show()
 
 ######################
 #
@@ -267,6 +244,7 @@ waypoints = []
 if mode == 'autonomous':
     # Part 3.1: Load path from disk and visualize it
     waypoints = np.load("path.npy")
+    target_pose = waypoints[0]
 
 state = 0 # use this to iterate through your path
 
