@@ -86,8 +86,8 @@ map = None
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
 #mode = 'manual' # Part 1.1: manual mode
-#mode = 'planner'
-mode = 'autonomous'
+mode = 'planner'
+#mode = 'autonomous'
 
 def get_neighbors(vertex, map): #can at most send a list of 4 pairs of coordinates
     x = vertex[0]
