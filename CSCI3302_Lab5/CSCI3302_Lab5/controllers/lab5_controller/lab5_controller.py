@@ -4,7 +4,7 @@ from controller import Robot, Motor, Camera, RangeFinder, Lidar, Keyboard
 import math
 import numpy as np
 from matplotlib import pyplot as plt
-from scipy.signal import convolve2d # Uncomment if you want to use something else for finding the configuration space
+#from scipy.signal import convolve2d # Uncomment if you want to use something else for finding the configuration space
 
 MAX_SPEED = 7.0  # [rad/s]
 MAX_SPEED_MS = 0.633 # [m/s]
@@ -84,8 +84,8 @@ map = None
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
 #mode = 'manual' # Part 1.1: manual mode
-mode = 'planner'
-# mode = 'autonomous'
+#mode = 'planner'
+mode = 'autonomous'
 
 def get_neighbors(vertex, map): #can at most send a list of 4 pairs of coordinates
     x = vertex[0]
@@ -177,19 +177,19 @@ if mode == 'planner':
     #Play with this number to find something suitable, the number corresponds to the # of pixels you want to cover
     kernel_size = 5
     
-    for i in range(len(lidar_map)):
-        for j in range(len(lidar_map[i])):
-               # filter out small values on the map
-                if lidar_map[i][j] < 1:
-                    lidar_map[i][j] = 0
+    # for i in range(len(lidar_map)):
+    #     for j in range(len(lidar_map[i])):
+    #            # filter out small values on the map
+    #             if lidar_map[i][j] < 1:
+    #                 lidar_map[i][j] = 0
 
-                #draw squares on each pixel
-                if lidar_map[i][j] != 0:
-                    lidar_map[i][j] = 0
-                    rectangle = plt.Rectangle((i - 1,j - 1), 8, 8, fc='yellow')           
-                    plt.gca().add_patch(rectangle)
-                    kernel = np.ones((kernel_size, kernel_size))
-                    convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
+    #             #draw squares on each pixel
+    #             if lidar_map[i][j] != 0:
+    #                 lidar_map[i][j] = 0
+    #                 rectangle = plt.Rectangle((i - 1,j - 1), 8, 8, fc='yellow')           
+    #                 plt.gca().add_patch(rectangle)
+    #                 kernel = np.ones((kernel_size, kernel_size))
+    #                 convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
                     #now threshold this map
                     
     plt.imshow(lidar_map)
@@ -344,6 +344,7 @@ while robot.step(timestep) != -1 and mode != 'planner':
     # Controller
     #
     ###################
+    #print("first")
     if mode == 'manual':
         key = keyboard.getKey()
         while(keyboard.getKey() != -1): pass
@@ -379,15 +380,25 @@ while robot.step(timestep) != -1 and mode != 'planner':
     else: # not manual mode
         # Part 3.2: Feedback controller
         #STEP 1: Calculate the error
-        if (math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)) < 0.05 and point_count < len(waypoints) - 1:
+        #print(point_count)
+        
+        # if (math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)) < 0.05 and point_count < len(waypoints) - 1:
+        #     print("Point + 1")
+        #     point_count+=1
+        #     target_pose = waypoints[point_count]
+        # elif point_count >= len(waypoints):
+        #     print("end of path!")
+
+        
+        if point_count < len(waypoints) - 1:
             point_count+=1
             target_pose = waypoints[point_count]
+            distance_error = math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)
+            bearing_error = math.atan((pose_y - target_pose[1])/(pose_x - target_pose[0])) - pose_theta
+            heading_error = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x))
         elif point_count >= len(waypoints):
             print("end of path!")
-        distance_error = math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)
-        bearing_error = math.atan((pose_y - target_pose[1])/(pose_x - target_pose[0])) - pose_theta
-        heading_error = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x))
-
+        
         
         #STEP 2: Controller
         
