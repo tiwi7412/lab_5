@@ -12,6 +12,7 @@ AXLE_LENGTH = 0.4044 # m
 MOTOR_LEFT = 10
 MOTOR_RIGHT = 11
 N_PARTS = 12
+WHEEL_RADIUS = 0.0904
 
 LIDAR_ANGLE_BINS = 667
 LIDAR_SENSOR_MAX_RANGE = 2.75 # Meters
@@ -245,6 +246,7 @@ if mode == 'autonomous':
     # Part 3.1: Load path from disk and visualize it
     waypoints = np.load("path.npy")
     target_pose = waypoints[0]
+    point_count = 0
 
 state = 0 # use this to iterate through your path
 
@@ -377,6 +379,11 @@ while robot.step(timestep) != -1 and mode != 'planner':
     else: # not manual mode
         # Part 3.2: Feedback controller
         #STEP 1: Calculate the error
+        if (math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)) < 0.05 and point_count < len(waypoints) - 1:
+            point_count+=1
+            target_pose = waypoints[point_count]
+        elif point_count >= len(waypoints):
+            print("end of path!")
         distance_error = math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)
         bearing_error = math.atan((pose_y - target_pose[1])/(pose_x - target_pose[0])) - pose_theta
         heading_error = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x))
@@ -396,8 +403,8 @@ while robot.step(timestep) != -1 and mode != 'planner':
         
         left_speed_pct = 0
         right_speed_pct = 0
-        phi_l = (dX - (dTheta*AXLE_LENGTH/2.)) / EPUCK_WHEEL_RADIUS
-        phi_r = (dX + (dTheta*AXLE_LENGTH/2.)) / EPUCK_WHEEL_RADIUS
+        phi_l = (dX - (dTheta*AXLE_LENGTH/2.))/WHEEL_RADIUS
+        phi_r = (dX + (dTheta*AXLE_LENGTH/2.))/WHEEL_RADIUS
         
         normalizer = max(abs(phi_l), abs(phi_r))
         left_speed_pct = (phi_l) / normalizer
