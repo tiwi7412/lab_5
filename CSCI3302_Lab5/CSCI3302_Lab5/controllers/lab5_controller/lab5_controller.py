@@ -377,19 +377,39 @@ while robot.step(timestep) != -1 and mode != 'planner':
     else: # not manual mode
         # Part 3.2: Feedback controller
         #STEP 1: Calculate the error
-        rho = 0
-        alpha = -(math.atan2(waypoint[state][1]-pose_y,waypoint[state][0]-pose_x) + pose_theta)
+        distance_error = math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)
+        bearing_error = math.atan((pose_y - target_pose[1])/(pose_x - target_pose[0])) - pose_theta
+        heading_error = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x))
 
-
+        
         #STEP 2: Controller
-        dX = 0
-        dTheta = 0
-
+        
+        dX_gain = 0.3
+        if distance_error > 0.05:
+            dTheta = bearing_error
+            if abs(bearing_error) > 0.05:
+                dX_gain = 0
+        else:
+            dTheta = heading_error
+            dX_gain = 0
+        dX = (dX_gain * distance_error)
+        
+        left_speed_pct = 0
+        right_speed_pct = 0
+        phi_l = (dX - (dTheta*AXLE_LENGTH/2.)) / EPUCK_WHEEL_RADIUS
+        phi_r = (dX + (dTheta*AXLE_LENGTH/2.)) / EPUCK_WHEEL_RADIUS
+        
+        normalizer = max(abs(phi_l), abs(phi_r))
+        left_speed_pct = (phi_l) / normalizer
+        right_speed_pct = (phi_r) / normalizer
+        
+        if distance_error < 0.05 and abs(heading_error) < 0.05:
+            left_speed_pct = 0
+            right_speed_pct = 0
         #STEP 3: Compute wheelspeeds
-        vL = 0
-        vR = 0
+        vL = left_speed_pct*MAX_SPEED/4
+        vR = right_speed_pct*MAX_SPEED/4
 
-        # Normalize wheelspeed
         # (Keep the wheel speeds a bit less than the actual platform MAX_SPEED to minimize jerk)
 
 
