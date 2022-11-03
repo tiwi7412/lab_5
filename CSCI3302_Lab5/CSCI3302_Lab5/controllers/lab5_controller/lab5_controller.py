@@ -4,7 +4,7 @@ from controller import Robot, Motor, Camera, RangeFinder, Lidar, Keyboard
 import math
 import numpy as np
 from matplotlib import pyplot as plt
-#from scipy.signal import convolve2d # Uncomment if you want to use something else for finding the configuration space
+from scipy.signal import convolve2d # Uncomment if you want to use something else for finding the configuration space
 
 MAX_SPEED = 7.0  # [rad/s]
 MAX_SPEED_MS = 0.633 # [m/s]
@@ -84,8 +84,8 @@ map = None
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
 #mode = 'manual' # Part 1.1: manual mode
-#mode = 'planner'
-mode = 'autonomous'
+mode = 'planner'
+#mode = 'autonomous'
 
 def get_neighbors(vertex, map): #can at most send a list of 4 pairs of coordinates
     x = vertex[0]
@@ -104,12 +104,16 @@ def get_neighbors(vertex, map): #can at most send a list of 4 pairs of coordinat
 def get_travel_cost(source, dest, map):
 
     if source == dest:
+        print("here1")
         return 0
-    elif map[source[0]][dest[1]] == 1:
+    elif map[dest[0]][dest[1]] > 0:
+        print("here2")
         return 1e5
-    elif abs(source[0] - dest[0]) + abs(source[1] - dest[1]) == 1:
+    elif abs(source[0] - dest[0]) + abs(source[1] - dest[1]) > 0:
+        print("here3")
         return 1
     else:
+        print("here4")
         return 1e5
 
 ###################
@@ -177,20 +181,20 @@ if mode == 'planner':
     #Play with this number to find something suitable, the number corresponds to the # of pixels you want to cover
     kernel_size = 5
     
-    # for i in range(len(lidar_map)):
-    #     for j in range(len(lidar_map[i])):
-    #            # filter out small values on the map
-    #             if lidar_map[i][j] < 1:
-    #                 lidar_map[i][j] = 0
+    for i in range(len(lidar_map)):
+         for j in range(len(lidar_map[i])):
+                # filter out small values on the map
+                 if lidar_map[i][j] < 1:
+                     lidar_map[i][j] = 0
 
-    #             #draw squares on each pixel
-    #             if lidar_map[i][j] != 0:
-    #                 lidar_map[i][j] = 0
-    #                 rectangle = plt.Rectangle((i - 1,j - 1), 8, 8, fc='yellow')           
-    #                 plt.gca().add_patch(rectangle)
-    #                 kernel = np.ones((kernel_size, kernel_size))
-    #                 convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
-                    #now threshold this map
+                 #draw squares on each pixel
+                 if lidar_map[i][j] != 0:
+                     lidar_map[i][j] = 0
+                     rectangle = plt.Rectangle((i - 1,j - 1), 8, 8, fc='yellow')           
+                     plt.gca().add_patch(rectangle)
+                     kernel = np.ones((kernel_size, kernel_size))
+                     convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
+                     #now threshold this map
                     
     plt.imshow(lidar_map)
     plt.show()
@@ -203,22 +207,19 @@ if mode == 'planner':
     
 
     # Part 2.3 continuation: Call path_planner
-    run_algo = False #runs algo and saves to path.npy file
-    if(run_algo):
-        path_full = path_planner(lidar_map, start, end) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
+    path_full = path_planner(lidar_map, start, end) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
 
     # Part 2.4: Turn paths into waypoints and save on disk as path.npy and visualize it
-    if(run_algo):
-        waypoints = []
-        for i in range(len(path_full)):
-            wp = [round(path_full[i][0]/-30, 2), round(path_full[i][1]/-30, 2)] #list index, coord
-            if i == 0:
-                waypoints.append(wp)
-            elif i > 0 and waypoints[-1] != wp:
-                waypoints.append(wp)
-        np.save('path.npy',waypoints)
-        print("waypoints file saved")
-        print(waypoints)
+    waypoints = []
+    for i in range(len(path_full)):
+        wp = [round(path_full[i][0]/-30, 2), round(path_full[i][1]/-30, 2)] #list index, coord
+        if i == 0:
+            waypoints.append(wp)
+        elif i > 0 and waypoints[-1] != wp:
+            waypoints.append(wp)
+    np.save('path.npy',waypoints)
+    print("waypoints file saved")
+    print(waypoints)
         
         #for k in range(len(waypoints)):
         #    waypoint_map = (waypoints[k][0]*(-30),waypoints[k][1]*(-30))
@@ -260,8 +261,8 @@ while robot.step(timestep) != -1 and mode != 'planner':
 
     ################ v [Begin] Do not modify v ##################
     # Ground truth pose
-    pose_y = -gps.getValues()[1]
-    pose_x = -gps.getValues()[0]
+    pose_y = gps.getValues()[1]
+    pose_x = gps.getValues()[0]
 
     n = compass.getValues()
     rad = ((math.atan2(n[0], -n[2])))#-1.5708)
@@ -390,15 +391,19 @@ while robot.step(timestep) != -1 and mode != 'planner':
         #     print("end of path!")
 
         
-        if point_count < len(waypoints) - 1:
+        if math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2) < 0.1 and point_count < len(waypoints) - 1:
             point_count+=1
             target_pose = waypoints[point_count]
-            distance_error = math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)
-            bearing_error = math.atan((pose_y - target_pose[1])/(pose_x - target_pose[0])) - pose_theta
-            heading_error = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x))
+            
         elif point_count >= len(waypoints):
             print("end of path!")
         
+        distance_error = math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)
+        bearing_error = math.atan((pose_y - target_pose[1])/(pose_x - target_pose[0])) - pose_theta
+        heading_error = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x))
+        
+        print("target_pose: ", target_pose)
+        print("distance_error: ", distance_error)
         
         #STEP 2: Controller
         
@@ -418,15 +423,15 @@ while robot.step(timestep) != -1 and mode != 'planner':
         phi_r = (dX + (dTheta*AXLE_LENGTH/2.))/WHEEL_RADIUS
         
         normalizer = max(abs(phi_l), abs(phi_r))
-        left_speed_pct = (phi_l) / normalizer
-        right_speed_pct = (phi_r) / normalizer
+        left_speed_pct = (phi_l)/normalizer
+        right_speed_pct = (phi_r)/normalizer
         
         if distance_error < 0.05 and abs(heading_error) < 0.05:
             left_speed_pct = 0
             right_speed_pct = 0
         #STEP 3: Compute wheelspeeds
-        vL = left_speed_pct*MAX_SPEED/4
-        vR = right_speed_pct*MAX_SPEED/4
+        vL = left_speed_pct*MAX_SPEED/2
+        vR = right_speed_pct*MAX_SPEED/2
 
         # (Keep the wheel speeds a bit less than the actual platform MAX_SPEED to minimize jerk)
 
