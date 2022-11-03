@@ -149,7 +149,7 @@ if mode == 'planner':
             _ = q_cost.pop(u)
             for neighbor in get_neighbors(u, map):
                 new_dist = dist[u] + get_travel_cost(u, neighbor, map)
-                if new_dist < dist[ (neighbor[0], neighbor[1]) ]:
+                if new_dist < dist[(neighbor[0], neighbor[1])]:
                     dist[(neighbor[0], neighbor[1])] = new_dist
                     q_cost[(neighbor[0], neighbor[1])] = new_dist
                     prev[(neighbor[0], neighbor[1])] = u
@@ -164,7 +164,6 @@ if mode == 'planner':
             parent_vertex = prev[(parent_vertex[0], parent_vertex[1])]
 
         path.reverse()
-        print(path)
         return path
 
     # Part 2.1: Load map (map.npy) from disk and visualize it    
@@ -197,12 +196,13 @@ if mode == 'planner':
     
 
     #test
-
+ 
     # Part 2.2: Compute an approximation of the “configuration space”
     
     
 
     # Part 2.3 continuation: Call path_planner
+<<<<<<< HEAD
     path_full = path_planner(lidar_map, start, end) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
     waypoints = []
     for i in range(len(path_full)):
@@ -232,6 +232,25 @@ if mode == 'planner':
     #print("path loaded")
     #plt.imshow(path_map)
     #plt.show()
+=======
+    run_algo = False #runs algo and saves to path.npy file
+    if(run_algo):
+        path_full = path_planner(lidar_map, start, end) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
+
+    # Part 2.4: Turn paths into waypoints and save on disk as path.npy and visualize it
+    if(run_algo):
+        waypoints = []
+        for i in range(len(path_full)):
+            wp = [round(path_full[i][0]/-30, 2), round(path_full[i][1]/-30, 2)] #list index, coord
+            if i == 0:
+                waypoints.append(wp)
+            elif i > 0 and waypoints[-1] != wp:
+                waypoints.append(wp)
+        np.save('path.npy',waypoints)
+        print("waypoints file saved")
+        print(waypoints)
+
+>>>>>>> 028f21a279007012842338c2e43b7204df3807d9
 
 ######################
 #
@@ -247,80 +266,9 @@ waypoints = []
 
 if mode == 'autonomous':
     # Part 3.1: Load path from disk and visualize it
-    waypoints = [] # Replace with code to load your path
+    waypoints = np.load("path.npy")
 
 state = 0 # use this to iterate through your path
-
-
-def heading():
-    global vL, vR, distance_error, bearing_error, heading_error
-    if heading_error < -.01:
-        vL = MAX_SPEED/2
-        vR = -MAX_SPEED/2
-    elif heading_error > .01:
-        vL = -MAX_SPEED/2
-        vR = MAX_SPEED/2
-    else:
-        vL = 0
-        vR = 0
-    print("heading", vL, vR)
-
-def distance():
-    global vL, vR, distance_error, bearing_error, heading_error
-    if distance_error > .01:
-        vL = MAX_SPEED/2
-        vR = MAX_SPEED/2
-    elif distance_error < .01:
-        vL = 0
-        vR = 0
-        heading()
-    print("distance", vL, vR)
-            
-
-def bearing():
-    global vL, vR, distance_error, bearing_error, heading_error
-    if bearing_error < -.01:
-        vL = MAX_SPEED/2
-        vR = -MAX_SPEED/2
-    elif bearing_error > .01:
-        vL = -MAX_SPEED/2
-        vR = MAX_SPEED/2
-    else:
-        vL = 0
-        vR = 0
-        distance()
-    print("bearing", vL, vR)
-
-
-def feedback_controller():
-    global vL, vR, distance_error, bearing_error, heading_error, waypoint_counter
-    print("feedback_controller1", vL, vR)
-    if distance_error > .015:
-        distance_constant = .2
-        if distance_error > .04:
-            phi_l = (distance_error*distance_constant - (bearing_error*AXLE_LENGTH)/2)/AXEL_RADIUS
-            phi_r = (distance_error*distance_constant + (bearing_error*AXLE_LENGTH)/2)/AXEL_RADIUS
-        else:
-            phi_l = (distance_error - (heading_error*AXLE_LENGTH)/2)/AXEL_RADIUS
-            phi_r = (distance_error + (heading_error*AXLE_LENGTH)/2)/AXEL_RADIUS
-            waypoint_counter = waypoint_counter + 1
-
-        if phi_l > phi_r:
-            vL = (MAX_SPEED/4) * (phi_l/phi_r)
-            vR = (MAX_SPEED/4)
-        elif phi_l < phi_r:
-            vL = (MAX_SPEED/4)
-            vR = (MAX_SPEED/4) * (phi_r/phi_l)
-        else:
-            vL = MAX_SPEED/2
-            vR = MAX_SPEED/2
-    else:
-        vL = 0
-        vR = 0
-        waypoint_counter = waypoint_counter + 1
-    print("feedback_controller1", vL, vR)
-
-
 
 while robot.step(timestep) != -1 and mode != 'planner':
 
@@ -451,20 +399,17 @@ while robot.step(timestep) != -1 and mode != 'planner':
     else: # not manual mode
         # Part 3.2: Feedback controller
         #STEP 1: Calculate the error
-        #rho = 0
-        #alpha = -(math.atan2(waypoint[state][1]-pose_y,waypoint[state][0]-pose_x) + pose_theta)
-        distance_error = math.sqrt((pose_x - waypoints[waypoint_counter][0])**2+(pose_y - waypoints[waypoint_counter][1])**2)
-        bearing_error = math.atan((pose_y - waypoints[waypoint_counter][1])/(pose_x - waypoints[waypoint_counter][0])) - pose_theta
-        heading_error = math.atan2((waypoints[waypoint_counter][1] - pose_y),(waypoints[waypoint_counter][0] - pose_x))
-        bearing()
-        feedback_controller()
+        rho = 0
+        alpha = -(math.atan2(waypoint[state][1]-pose_y,waypoint[state][0]-pose_x) + pose_theta)
+
+
         #STEP 2: Controller
-        #dX = 0
-        #dTheta = 0
+        dX = 0
+        dTheta = 0
 
         #STEP 3: Compute wheelspeeds
-        #vL = 0
-        #vR = 0
+        vL = 0
+        vR = 0
 
         # Normalize wheelspeed
         # (Keep the wheel speeds a bit less than the actual platform MAX_SPEED to minimize jerk)
