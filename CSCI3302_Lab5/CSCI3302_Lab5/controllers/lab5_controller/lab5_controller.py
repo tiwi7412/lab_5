@@ -398,7 +398,12 @@ while robot.step(timestep) != -1 and mode != 'planner':
             print("end of path!")
 
         distance_error = math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)
-        bearing_error = math.atan2((pose_y - target_pose[1]),(pose_x - target_pose[0])) - pose_theta
+        if target_pose[0] - pose_x < 0:    
+            bearing_error = math.atan2((pose_y - target_pose[1]),(pose_x - target_pose[0])) - pose_theta + math.pi
+            theta_should_be = math.atan2((pose_y - target_pose[1]),(pose_x - target_pose[0])) + math.pi
+        else:
+            bearing_error = math.atan2((pose_y - target_pose[1]),(pose_x - target_pose[0])) - pose_theta
+            theta_should_be = math.atan2((pose_y - target_pose[1]),(pose_x - target_pose[0]))
         heading_error = bearing_error
 
         
@@ -406,7 +411,7 @@ while robot.step(timestep) != -1 and mode != 'planner':
         print("Current pose X: ", pose_x, " Y: ", pose_y, " Theta: ", pose_theta)
         print("distance_error: ", distance_error)
         print("heading_error: ", heading_error)
-        print("theta should be: ", math.atan2((pose_y - target_pose[1]),(pose_x - target_pose[0])))
+        print("theta should be: ", theta_should_be)
         #STEP 2: Controller
         if distance_error > 0.015:
             distance_constant = .2
