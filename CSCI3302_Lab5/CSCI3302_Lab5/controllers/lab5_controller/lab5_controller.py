@@ -170,6 +170,7 @@ if mode == 'planner':
     # Part 2.1: Load map (map.npy) from disk and visualize it    
 
 
+
     lidar_map = np.load("map.npy")
     print("lidar_map loaded")
 
@@ -190,7 +191,7 @@ if mode == 'planner':
                     kernel = np.ones((kernel_size, kernel_size))
                     convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
                     #now threshold this map
-    
+                    
     plt.imshow(lidar_map)
     plt.show()
     
@@ -203,8 +204,6 @@ if mode == 'planner':
 
     # Part 2.3 continuation: Call path_planner
     path_full = path_planner(lidar_map, start, end) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
-
-    # Part 2.4: Turn paths into waypoints and save on disk as path.npy and visualize it
     waypoints = []
     for i in range(len(path_full)):
         wp = [round(path_full[i][0]/-30, 2), round(path_full[i][1]/-30, 2)] #list index, coord
@@ -215,6 +214,20 @@ if mode == 'planner':
     np.save('path.npy',waypoints)
     print("waypoints file saved")
     print(waypoints)
+    
+    #for k in range(len(waypoints)):
+    #    waypoint_map = (waypoints[k][0]*(-30),waypoints[k][1]*(-30))
+    #    if i == waypoint_map[0] and j == waypoint_map[1]:
+    #        rectangle = plt.Rectangle((i - 1,j - 1), 2, 2, fc='green')           
+    #        plt.gca().add_patch(rectangle)
+    #        kernel = np.ones((kernel_size, kernel_size))
+    #        convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
+    #plt.imshow(lidar_map)
+    #plt.show()
+    
+    
+    # Part 2.4: Turn paths into waypoints and save on disk as path.npy and visualize it
+
     #path_map = np.load("path.npy")
     #print("path loaded")
     #plt.imshow(path_map)
