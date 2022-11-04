@@ -271,7 +271,6 @@ waypoints = []
 if mode == 'autonomous':
     # Part 3.1: Load path from disk and visualize it
     waypoints = np.load("path.npy")
-    waypoints = [[-8.43, -4.67], [-8.00, -4.8], [-7.8, -5], [-7.6, -5.2], [-7.2, -5.4], [-7.0, -5.4], [-6.8, -5.4], [-6.6, -5.4], [-6.5, -5.4], [-6.4, -5.4], [-6.4, -5.6], [-6.4, -5.8], [-6.3, -6], [-6.3, -6.2], [-6.3, -6.4], [-6.3, -7], [-6.3, -7.5], [-6.3, -8], [-6.3, -8.5], [-6.3, -8.75], [-6.5, -9], [-6.7, -9.2], [-6.9, -9.4], [-7, -10]]
     target_pose = waypoints[1]#waypoints[10]
     point_count = 0
     prev_DE = 0
@@ -425,38 +424,28 @@ while robot.step(timestep) != -1 and mode != 'planner':
             target_pose = waypoints[point_count]
             print("new target pose is: ", target_pose)
             print("step: ", point_count, " of ", len(waypoints))
-        elif point_count >= len(waypoints):
-            print("end of path!")
+        
 
         distance_error = math.sqrt((pose_x - target_pose[0])**2+(pose_y - target_pose[1])**2)
-        if target_pose[0] < pose_x:   
-            bearing_error = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x)) - pose_theta + math.pi
-            theta_should_be = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x)) + math.pi
-        else:
-            bearing_error = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x)) - pose_theta
-            theta_should_be = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x))
-        heading_error = bearing_error
-
+            
+        heading_error = math.atan2((waypoints[point_count][1] - waypoints[point_count-1][1]), (waypoints[point_count][0] - waypoints[point_count-1][0])) - pose_theta
+        bearing_error = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x)) - pose_theta
+        theta_should_be = math.atan2((target_pose[1] - pose_y),(target_pose[0] - pose_x))
         
-        print("target_pose: ", target_pose)
-        print("Current pose X: ", pose_x, " Y: ", pose_y, " Theta: ", pose_theta)
-        print("distance_error: ", distance_error)
-        print("heading_error: ", heading_error)
-        print("theta should be: ", theta_should_be)
-        #if target_pose[1] - pose_y < 0.1 and target_pose[1] - pose_y < 0.1: 
+        #print("target_pose: ", target_pose)
+        #print("Current pose X: ", pose_x, " Y: ", pose_y, " Theta: ", pose_theta)
+        #print("distance_error: ", distance_error)
+        #print("bearing_error: ", bearing_error)
+        #print("theta should be: ", theta_should_be)
         #STEP 2: Controller
         if distance_error > 0.015:
             distance_constant = .2
-            if distance_error > 0.05:
-                phi_l = (distance_error*distance_constant - (bearing_error*AXLE_LENGTH)/2)/AXLE_RADIUS
-                phi_r = (distance_error*distance_constant + (bearing_error*AXLE_LENGTH)/2)/AXLE_RADIUS
+            if distance_error > 0.5:
+                phi_l = (distance_error - bearing_error)
+                phi_r = (distance_error + bearing_error)
             else:
-                phi_l = (distance_error - (heading_error*AXLE_LENGTH)/2)/AXLE_RADIUS
-                phi_r = (distance_error + (heading_error*AXLE_LENGTH)/2)/AXLE_RADIUS
-                print("point found")
-                point_count+=1
-                robot_parts[MOTOR_LEFT].setVelocity(0)
-                robot_parts[MOTOR_RIGHT].setVelocity(0)
+                phi_l = (1 - bearing_error)
+                phi_r = (1 + bearing_error)
         #STEP 3: Compute wheelspeeds
             if phi_l < phi_r:
                 vL = (MAX_SPEED/4) * (phi_l/phi_r)
@@ -467,13 +456,18 @@ while robot.step(timestep) != -1 and mode != 'planner':
             else:
                 vL = MAX_SPEED/2
                 vR = MAX_SPEED/2
+            if point_count >= len(waypoints) - 1:
+                print("end of path!")
+                vL = 0
+                vR = 0
             #if prev_DE - distance_error < 0 and for_a_few <= 0:
             #    direction = -direction
             #    for_a_few = 100
-            vL = vL * direction
-            vR = vR * direction
-            prev_DE = distance_error
-            for_a_few -= 1 #so it gives the robot a second to change directions
+            #print("phi_l: ", phi_l, " phi_r: ", phi_r)
+            #print("vL: ", vL, " vR: ", vR)
+            #prev_DE = distance_error
+            #for_a_few -= 1 #so it gives the robot a second to change directions
+
         # (Keep the wheel speeds a bit less than the actual platform MAX_SPEED to minimize jerk)
 
 
