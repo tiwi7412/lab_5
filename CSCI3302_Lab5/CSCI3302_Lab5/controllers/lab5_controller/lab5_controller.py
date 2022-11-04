@@ -4,7 +4,7 @@ from controller import Robot, Motor, Camera, RangeFinder, Lidar, Keyboard
 import math
 import numpy as np
 from matplotlib import pyplot as plt
-from scipy.signal import convolve2d # Uncomment if you want to use something else for finding the configuration space
+#from scipy.signal import convolve2d # Uncomment if you want to use something else for finding the configuration space
 import sys
 
 MAX_SPEED = 7.0  # [rad/s]
@@ -36,6 +36,7 @@ part_names = ("head_2_joint", "head_1_joint", "torso_lift_joint", "arm_1_joint",
 # All motors except the wheels are controlled by position control. The wheels
 # are controlled by a velocity controller. We therefore set their position to infinite.
 target_pos = (0.0, 0.0, 0.09, 0.07, 1.02, -3.16, 1.27, 1.32, 0.0, 1.41, 'inf', 'inf')
+waypoint = [[-8.43, -4.67], [-8.00, -4.8], [-7.8, -5], [-7.6, -5.2], [-7.2, -5.4], [-7.0, -5.4], [-6.8, -5.4], [-6.6, -5.4], [-6.5, -5.4], [-6.4, -5.4], [-6.4, -5.6], [-6.4, -5.8], [-6.3, -6], [-6.3, -6.2], [-6.3, -6.4], [-6.3, -7], [-6.3, -7.5], [-6.3, -8], [-6.3, -8.5], [-6.3, -8.75], [-6.5, -9], [-6.7, -9.2], [-6.9, -9.4], [-7, -10]]
 robot_parts=[]
 
 for i in range(N_PARTS):
@@ -220,8 +221,8 @@ if mode == 'planner':
                  for neighbor in get_neighbors_bigger((i,j), lidar_map_copy_1):
                      lidar_map_copy_2[neighbor[0]][neighbor[1]] = 1 
                     
-    plt.imshow(lidar_map_copy_2)
-    plt.show()
+    # plt.imshow(lidar_map_copy_2)
+    # plt.show()
     
 
     #test
@@ -240,7 +241,7 @@ if mode == 'planner':
             waypoints.append(wp)
         elif i > 0 and waypoints[-1] != wp:
             waypoints.append(wp)
-    np.save('path_new.npy',waypoints)
+    np.save('path.npy',waypoints)
     print("waypoints file saved")
     print(waypoints)
         
@@ -269,8 +270,8 @@ waypoints = []
 if mode == 'autonomous':
     # Part 3.1: Load path from disk and visualize it
     waypoints = np.load("path.npy")
-    target_pose = waypoints[1]#waypoints[10]
-    print(waypoints)
+    target_pose = waypoint[1]#waypoints[10]
+    #print(waypoints)
     point_count = 1 # use this to iterate through your path
 
 while robot.step(timestep) != -1 and mode != 'planner':
