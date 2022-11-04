@@ -196,7 +196,6 @@ if mode == 'planner':
 
     lidar_map = np.load("map.npy")
     print("lidar_map loaded")
-
     #Play with this number to find something suitable, the number corresponds to the # of pixels you want to cover
     lidar_map_copy = lidar_map.copy()
     for i in range(len(lidar_map)):
