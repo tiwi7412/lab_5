@@ -128,7 +128,7 @@ def get_neighbors_bigger(vertex, map):
 def get_travel_cost(source, dest, map):
     if source == dest:
         return 0
-    elif map[dest[0]][dest[1]] > 0.2:
+    elif map[dest[0]][dest[1]] > 0.1:
         return 1e5
     return 1
         
@@ -197,24 +197,30 @@ if mode == 'planner':
     print("lidar_map loaded")
 
     #Play with this number to find something suitable, the number corresponds to the # of pixels you want to cover
-    kernel_size = 5
-    
+    lidar_map_copy = lidar_map.copy()
     for i in range(len(lidar_map)):
          for j in range(len(lidar_map[i])):
-                # filter out small values on the map
-                 if lidar_map[i][j] < 1:
-                     lidar_map[i][j] = 0
-
-                 #draw squares on each pixel
-                 if lidar_map[i][j] != 0:
-                     lidar_map[i][j] = 0
-                     rectangle = plt.Rectangle((i - 1,j - 1), 8, 8, fc='yellow')           
-                     plt.gca().add_patch(rectangle)
-                     kernel = np.ones((kernel_size, kernel_size))
-                     convolved_map = convolve2d(lidar_map, kernel, mode = 'same')
-                     #now threshold this map
+             if lidar_map[i][j] > 0.2:
+                 lidar_map_copy[i][j] = 1
+                 for neighbor in get_neighbors_bigger((i,j), lidar_map):
+                     lidar_map_copy[neighbor[0]][neighbor[1]] = 1 
+    lidar_map_copy_1 = lidar_map_copy.copy()
+    for i in range(len(lidar_map_copy)):
+         for j in range(len(lidar_map_copy[i])):
+             if lidar_map_copy[i][j] > 0.2:
+                 lidar_map_copy_1[i][j] = 1
+                 for neighbor in get_neighbors_bigger((i,j), lidar_map_copy):
+                     lidar_map_copy_1[neighbor[0]][neighbor[1]] = 1 
+                     
+    lidar_map_copy_2 = lidar_map_copy_1.copy()
+    for i in range(len(lidar_map_copy_1)):
+         for j in range(len(lidar_map_copy_1[i])):
+             if lidar_map_copy_1[i][j] > 0.2:
+                 lidar_map_copy_2[i][j] = 1
+                 for neighbor in get_neighbors_bigger((i,j), lidar_map_copy_1):
+                     lidar_map_copy_2[neighbor[0]][neighbor[1]] = 1 
                     
-    plt.imshow(lidar_map)
+    plt.imshow(lidar_map_copy_2)
     plt.show()
     
 
@@ -224,15 +230,7 @@ if mode == 'planner':
 
     
     # Part 2.3 continuation: Call path_planner
-    lidar_map = np.load("map.npy")
-    lidar_map_copy = lidar_map.copy()
-    for i in range(len(lidar_map)):
-         for j in range(len(lidar_map[i])):
-             if lidar_map[i][j] > 0.2:
-                 lidar_map_copy[i][j] = 1
-                 for neighbor in get_neighbors_bigger((i,j), lidar_map):
-                     lidar_map_copy[neighbor[0]][neighbor[1]] = 1 
-    path_full = path_planner(lidar_map_copy, start, end) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
+    path_full = path_planner(lidar_map_copy_2, start, end) #returns a list of coords #need to change end_w = (10.0, 7.0) # Pose_X, Pose_Z in meters and start to robot start pos
     
     # Part 2.4: Turn paths into waypoints and save on disk as path.npy and visualize it
     waypoints = []
@@ -242,7 +240,7 @@ if mode == 'planner':
             waypoints.append(wp)
         elif i > 0 and waypoints[-1] != wp:
             waypoints.append(wp)
-    np.save('path.npy',waypoints)
+    np.save('path_new.npy',waypoints)
     print("waypoints file saved")
     print(waypoints)
         
@@ -272,12 +270,8 @@ if mode == 'autonomous':
     # Part 3.1: Load path from disk and visualize it
     waypoints = np.load("path.npy")
     target_pose = waypoints[1]#waypoints[10]
-    point_count = 0
-    prev_DE = 0
-    direction = 1
-    for_a_few = 0
-    STOP_TURNING = 0
-state = 0 # use this to iterate through your path
+    print(waypoints)
+    point_count = 1 # use this to iterate through your path
 
 while robot.step(timestep) != -1 and mode != 'planner':
 
@@ -460,6 +454,9 @@ while robot.step(timestep) != -1 and mode != 'planner':
                 print("end of path!")
                 vL = 0
                 vR = 0
+                robot_parts[MOTOR_LEFT].setVelocity(vL)
+                robot_parts[MOTOR_RIGHT].setVelocity(vR)
+                sys.exit()
             #if prev_DE - distance_error < 0 and for_a_few <= 0:
             #    direction = -direction
             #    for_a_few = 100
